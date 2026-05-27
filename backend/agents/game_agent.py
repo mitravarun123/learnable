@@ -1,8 +1,8 @@
-import anthropic
+from google import genai
 import json
 import os
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 GAME_TYPES = {
     "adhd": "fast tap game with immediate rewards, very short question",
@@ -18,14 +18,10 @@ async def generate_game(child_input: str, child_profile: dict) -> dict:
     age = child_profile.get("age", 7)
     game_style = GAME_TYPES.get(disability, GAME_TYPES["none"])
 
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=400,
-        system="""You create mini games for children. 
-        Respond with ONLY valid JSON, no markdown, no extra text.""",
-        messages=[{
-            "role": "user",
-            "content": f"""Create a mini game about "{child_input}" for age {age}.
+    prompt = f"""You create mini games for children.
+Respond with ONLY valid JSON, no markdown, no extra text.
+
+Create a mini game about "{child_input}" for age {age}.
 Style: {game_style}
 
 Return ONLY this JSON:
@@ -41,8 +37,11 @@ Return ONLY this JSON:
   "correct_message": "Amazing! You got it! 🎉",
   "try_again_message": "Almost there! Try again! 💪"
 }}"""
-        }]
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
     )
-    text = response.content[0].text.strip()
+    text = response.text.strip()
     clean = text.replace("```json", "").replace("```", "").strip()
     return json.loads(clean)

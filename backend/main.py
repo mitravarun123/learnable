@@ -1,9 +1,9 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import learn, videos
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = FastAPI(title="LearnAble API")
 
